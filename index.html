@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image" href="img.png">
+  <title>RFID Smart Shopping System</title>
+
+</head>
+
+<body id="sss">
+
+  <div class="Container">
+    <br>
+
+    <center>
+      <h1 float="left">
+        <font face="Bedrock" size="45%">RFID Smart Shopping System</font>
+      </h1>
+    </center>
+
+    <br><br><br>
+
+    <div class="row">
+      <div class="col-md-2">
+      </div>
+      <div class="col-md-8" id="imp">
+        <div class="float-left">
+          <p class="float-right pr-5 font-weight-bold h5" id="total"></p>
+
+          <p class="float-right font-weight-bold pr-1 h5" id="tess">Rs. </p>
+
+          <p class="float-right pr-1 font-weight-bold h5"> Total = </p>
+        </div>
+
+        <a class="btn btn-primary btn-success btn-lg float-right" id="mybtn" href="pay.html" role="button"
+          style="margin:5px;">
+          Pay
+        </a>
+
+        <a class="btn btn-primary btn btn-danger btn-lg float-right" id="clearbtn" role="button" style="margin:5px;">
+          Clear
+        </a>
+
+        <br><br><br><br>
+
+        <table class="table p-3 mb-2 bg-secondary text-white" id='dataTbl'>
+          <thead class="table table-striped"">
+              <tr>
+                <th scope=" col">#</th>
+            <th scope="col">Item Name</th>
+            <th scope="col">Price</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+        <br>
+        <div class="col-md-2">
+        </div>
+      </div>
+      <br>
+
+      <!-- Optional JavaScript -->
+      <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+      <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+      <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+    </div>
+
+</body>
+
+</html>
+
+<script type="module">
+
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.12.1/firebase-app.js";
+  import { getDatabase, set, ref, push, child, onValue, remove } from "https://www.gstatic.com/firebasejs/9.12.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBhdv2CXYLzVTmnOGJ3uSXBENlih-bFFMM",
+    authDomain: "rfid-5e28c.firebaseapp.com",
+    databaseURL: "https://rfid-5e28c-default-rtdb.firebaseio.com",
+    projectId: "rfid-5e28c",
+    storageBucket: "rfid-5e28c.appspot.com",
+    messagingSenderId: "296113625963",
+    appId: "1:296113625963:web:983cd916d1b424be68ca2e",
+    measurementId: "G-P7G8W11WPT"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  // const analytics = getAnalytics(app);
+  const database = getDatabase(app);
+
+  $('#dataTbl td').remove();
+  var rowNum = 0;
+  var total = 0;
+
+  //1st dataset - loading one 
+  const dbRef1 = ref(database, 'attendence/cc/');
+  onValue(dbRef1, (snapshot) => {
+    snapshot.forEach((childSnapshot) => {
+      const childKey1 = childSnapshot.key;
+      const childData1 = childSnapshot.val();
+
+
+      //second foreach loop
+      const dbRef2 = ref(database, 'Items/');
+      onValue(dbRef2, (snapshot) => {
+        snapshot.forEach((childSnapshot) => {
+          const childKey2 = childSnapshot.key;
+          const childData2 = childSnapshot.val();
+
+          if (childData2.OKID == childData1.uid) {
+            rowNum += 1;
+            var row = "<tr><td>" + rowNum + "</td><td>" + childData2.Name + "</td><td>" + childData2.Price + "</td></tr>"
+
+            $(row).appendTo('#dataTbl');
+            total = total + childData2.Price;
+          };
+
+          document.getElementById("total").innerHTML = total;
+
+        });
+
+
+      }, {
+        onlyOnce: true
+      });
+
+
+    });
+  }, {
+    onlyOnce: true
+  });
+
+  console.log();
+
+  document.getElementById("clearbtn").addEventListener("click", function () {
+    remove(ref(database, 'attendence/cc/'));
+    $('#dataTbl td').remove();
+    $('#total').remove();
+
+  });
+
+  let counter = 1;
+  setInterval(() => {
+
+    counter++;
+    if (counter > 10) location.reload();
+  }, 1000);
+
+</script>
